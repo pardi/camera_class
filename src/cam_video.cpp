@@ -97,10 +97,8 @@ void cam_video::start_capture(){
 
         thr = remove_field(ocvMat_);
 
-
-        // Show otsu result
-        imshow("Otsu dTH", thr );
-
+        // Show removing field result
+        imshow("Remove Field", thr );
 
         // Morphologic operations
         thr = morph_operation(thr);
