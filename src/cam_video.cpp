@@ -98,7 +98,7 @@ void cam_video::start_capture(){
         thr = remove_field(ocvMat_);
 
         // Show removing field result
-        imshow("Remove Field", thr );
+        // imshow("Remove Field", thr );
 
         // Morphologic operations
         thr = morph_operation(thr);
@@ -126,6 +126,8 @@ void cam_video::start_capture(){
             target_ = sl.get_max();
             // Clear list
             sl.clear();
+            
+            // cout << target_.x << " "<< target_.y << endl;
 
             // Kalman Filter 
             if (!state_kf_){
@@ -135,6 +137,7 @@ void cam_video::start_capture(){
             else
                 target_ = kalman(target_);  
             
+            // cout << target_.x << " "<< target_.y << endl;
 
             // Draw point
 
@@ -965,6 +968,12 @@ void cam_video::init_kalman(const Point target){
 
     KF_->transitionMatrix = (Mat_<float>(4, 4) << 1,0,1,0,   0,1,0,1,  0,0,1,0,  0,0,0,1);
  
+    // KF_->statePost.at<float>(0) = target.x;
+    // KF_->statePost.at<float>(1) = target.y;
+    // KF_->statePost.at<float>(2) = 0;
+    // KF_->statePost.at<float>(3) = 0;
+
+
     KF_->statePre.at<float>(0) = target.x;
     KF_->statePre.at<float>(1) = target.y;
     KF_->statePre.at<float>(2) = 0;
@@ -973,7 +982,8 @@ void cam_video::init_kalman(const Point target){
     setIdentity(KF_->measurementMatrix);
     setIdentity(KF_->processNoiseCov, Scalar::all(1e-4));
     setIdentity(KF_->measurementNoiseCov, Scalar::all(10));
-    setIdentity(KF_->errorCovPost, Scalar::all(.1)); 
+    setIdentity(KF_->errorCovPost, Scalar::all(.1));
+
 }
 
 Point cam_video::kalman(const Point target){
