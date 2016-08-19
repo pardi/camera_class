@@ -1,0 +1,1 @@
+/home/solaris/camera_class/build/CMakeFiles/main.dir

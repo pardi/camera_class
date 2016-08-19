@@ -1,0 +1,7 @@
+cmake_minimum_required(VERSION 2.8)
+project( main )
+find_package( OpenCV REQUIRED )
+include_directories( ${OpenCV_INCLUDE_DIRS} /usr/include include)
+LINK_DIRECTORIES(/usr/lib)
+add_executable( main src/main.cpp src/cam_video.cpp src/SortList.cpp)
+target_link_libraries( main ${OpenCV_LIBS} ueye_api)
