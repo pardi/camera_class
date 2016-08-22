@@ -65,6 +65,8 @@
 #define MAX_BLOB_SIZE		1000000
 #define MIN_BLOB_SIZE		4000
 
+#define RAD2DEG				(180.0 / M_PI)
+
 #define VIDEO_NAME			"recognition"
 #define VIDEO_RAW_NAME		"recognition_raw"
 

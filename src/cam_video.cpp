@@ -17,11 +17,11 @@ cam_video::cam_video(const HIDS id, const int fps, const bool verbose){
 
     ocvMat_ = Mat(CAM_VIDEO_HEIGHT, CAM_VIDEO_WIDTH, CV_8UC3);
 
-    if (!init()){
-        is_ok_ = false;
-        terminate_on_error();
-        return;
-    }
+    // if (!init()){
+    //     is_ok_ = false;
+    //     terminate_on_error();
+    //     return;
+    // }
 
     is_ok_ = true;
 
@@ -57,10 +57,10 @@ void cam_video::start_capture(){
 
     cout << "- CaptureVideo Enabled --> ";
     
-    if (is_CaptureVideo (hCam_, IS_WAIT) != IS_SUCCESS)
-        terminate_on_error();
-    else
-        cout << "OK" << endl;
+    // if (is_CaptureVideo (hCam_, IS_WAIT) != IS_SUCCESS)
+    //     terminate_on_error();
+    // else
+    //     cout << "OK" << endl;
         
 
     struct timeval time_after, time_before;
@@ -88,17 +88,17 @@ void cam_video::start_capture(){
         /// --- 
         
         // Get Frame runtime
-        get_frame();
+        // get_frame();
 
         // Get Frame offline
-        // get_static_frame();
+        get_static_frame();
        
         /// Remove field by color
 
         thr = remove_field(ocvMat_);
 
         // Show removing field result
-        // imshow("Remove Field", thr );
+        imshow("Removed Field", thr );
 
         // Morphologic operations
         thr = morph_operation(thr);
@@ -592,7 +592,12 @@ Mat cam_video::otsuTH(Mat src, bool inv){
 
 void cam_video::t_matching(descriptor dsc, Mat tmpl){
  
+
+    // imshow("Not Rotate", dsc.img);
+
     Mat src = adjust_rotation(dsc);   
+
+    // imshow("Rotate", src);
 
     // Choose  match method
 
@@ -632,6 +637,8 @@ void cam_video::t_matching(descriptor dsc, Mat tmpl){
     if (result_rows <= 0 || result_cols <= 0 || result_cols * result_rows < MIN_BLOB_SIZE || result_cols * result_rows > MAX_BLOB_SIZE)
         return;
 
+    // cout << "Area: " << result_cols * result_rows << endl;
+
     // Allocate new dimensions
     result.create( result_rows, result_cols, CV_32FC1 );
 
@@ -665,7 +672,6 @@ void cam_video::t_matching(descriptor dsc, Mat tmpl){
 
     // Push point the sorted list
     sl.push(matchLoc, maxVal);
-
 
     // Create point with custom dimensions
     Point fdsc(dsc.origin.x + dsc.img.cols, dsc.origin.y + dsc.img.rows);
@@ -747,7 +753,7 @@ vector<descriptor> cam_video::get_blob(const Mat src){
 
             if (cb[i][j].x < minX){
                 minX = cb[i][j].x;
-                cateto_b = cb[i][j].y;
+                cateto_a = cb[i][j].y;
             }
 
             if (cb[i][j].y > maxY)
@@ -758,6 +764,7 @@ vector<descriptor> cam_video::get_blob(const Mat src){
                 cateto_b = cb[i][j].x;
             }
         }
+        
         // Save the blob from original image
 
         blob = ocvMat_(Rect(minX, minY, maxX - minX, maxY - minY));
@@ -768,8 +775,7 @@ vector<descriptor> cam_video::get_blob(const Mat src){
         bd.origin.x = minX;
         bd.origin.y = minY;
 
-        bd.alpha = atan2(cateto_a, cateto_b);
-
+        bd.alpha = atan2(cateto_b, cateto_a);
 
         blob_descriptor.push_back(bd);
         
@@ -795,7 +801,21 @@ Mat cam_video::morph_operation(Mat src, const bool inv){
 
 Mat cam_video::adjust_rotation(descriptor dsc){
 
-    return dsc.img;    
+    Mat dst;
+
+    // // Get center of image
+    // Point2f src_center(dsc.img.cols / 2.0F, dsc.img.rows / 2.0F);
+
+    // // Get matrix rotation 
+    // Mat rot_mat = getRotationMatrix2D(src_center, cdsc.alpha * RAD2DEG, 1.0);
+    
+    // Mat dst;
+    
+    // warpAffine(dsc.img, dst, rot_mat, dsc.img.size());
+
+    dst = dsc.img;
+
+    return dst;    
 }
 
 Mat cam_video::LHE_operation(Mat src){
@@ -966,23 +986,24 @@ void cam_video::init_kalman(const Point target){
 
     // intialization of KF...
 
-    KF_->transitionMatrix = (Mat_<float>(4, 4) << 1,0,1,0,   0,1,0,1,  0,0,1,0,  0,0,0,1);
+    KF_->transitionMatrix = (Mat_<float>(4, 4) << 1,0,50,0,   0,1,0,50,  0,0,1,0,  0,0,0,1);
  
-    // KF_->statePost.at<float>(0) = target.x;
-    // KF_->statePost.at<float>(1) = target.y;
-    // KF_->statePost.at<float>(2) = 0;
-    // KF_->statePost.at<float>(3) = 0;
+    KF_->statePost.at<float>(0) = target.x;
+    KF_->statePost.at<float>(1) = target.y;
+    KF_->statePost.at<float>(2) = 0;
+    KF_->statePost.at<float>(3) = 0;
 
-
-    KF_->statePre.at<float>(0) = target.x;
-    KF_->statePre.at<float>(1) = target.y;
-    KF_->statePre.at<float>(2) = 0;
-    KF_->statePre.at<float>(3) = 0;
+    // WRONG! ONLY TEST
+    // KF_->statePre.at<float>(0) = target.x;
+    // KF_->statePre.at<float>(1) = target.y;
+    // KF_->statePre.at<float>(2) = 0;
+    // KF_->statePre.at<float>(3) = 0;
 
     setIdentity(KF_->measurementMatrix);
     setIdentity(KF_->processNoiseCov, Scalar::all(1e-4));
     setIdentity(KF_->measurementNoiseCov, Scalar::all(10));
     setIdentity(KF_->errorCovPost, Scalar::all(.1));
+
 
 }
 
